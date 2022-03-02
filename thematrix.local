@@ -1,0 +1,14 @@
+$ORIGIN thematrix.local.
+$TTL 1W
+;
+@ 	IN SOA	 ns1.thematrix.local. hostmaster.thematrix.local. (
+		 21120117
+		 1D
+		 1H
+		 1W
+		 1D )
+;
+	IN NS	 ns1
+;
+ns1	IN A	 10.0.2.8
+dc	IN A	 10.0.2.6
