@@ -10,5 +10,8 @@ $TTL 1W
 
 	IN NS 	 ns1.thematrix.local.
 
-8	IN PTR	 ns1.thematrix.local.
-6	IN PTR	 dc.thematrix.local.
+34	IN PTR	 ns1.thematrix.local.
+35	IN PTR	 dc.thematrix.local.
+36	IN PTR	 web.thematrix.local.
+37	IN PTR	 mail.thematrix.local.
+38	IN PTR	 mdt.thematrix.local.
