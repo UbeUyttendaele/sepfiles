@@ -1,4 +1,4 @@
-$ORIGIN 2.0.10.in-addr.arpa.
+$ORIGIN 1.168.192.in-addr.arpa.
 $TTL 1W
 ;
 @	IN SOA 	 ns1.thematrix.local. hostmaster.thematrix.local. (
