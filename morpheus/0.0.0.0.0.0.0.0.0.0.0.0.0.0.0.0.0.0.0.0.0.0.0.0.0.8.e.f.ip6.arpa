@@ -1,4 +1,4 @@
-@ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.IP6.arpa.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.IP6.arpa.
 $TTL 1W
 ;
 @       IN SOA   ns1.thematrix.local. hostmaster.thematrix.local. (
