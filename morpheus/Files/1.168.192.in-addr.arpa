@@ -1,0 +1,17 @@
+$ORIGIN 1.168.192.in-addr.arpa.
+$TTL 1W
+;
+@       IN SOA   ns1.thematrix.local. hostmaster.thematrix.local. (
+                 21120117
+                 1D
+                 1H
+                 1W
+                 1D )
+
+        IN NS    ns1.thematrix.local.
+
+34      IN PTR   ns1.thematrix.local.
+35      IN PTR   dc.thematrix.local.
+36      IN PTR   web.thematrix.local.
+37      IN PTR   mail.thematrix.local.
+38      IN PTR   mdt.thematrix.local.
