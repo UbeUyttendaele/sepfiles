@@ -1,5 +1,6 @@
 #! /bin/bash
 GREEN='\033[0;32m'
+RED='\033[1;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 #example: echo -e "I ${RED}love${NC} Stack Overflow"
@@ -32,7 +33,7 @@ echo -e "${BLUE}Installing ${GREEN}nginx${BLUE} & ${GREEN}postgresql ${BLUE}#thi
     dnf install postgresql-server vim nginx -y &> /dev/null
 echo -e "${BLUE}Initializing database"
     postgresql-setup --initdb &> /dev/null
-    systemctl enable --now postgresql
+    systemctl enable --now postgresql &> /dev/null
 
     wget  -qO /tmp/database.sh https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/database.sh
     chmod +x /tmp/database.sh &> /dev/null
@@ -47,8 +48,23 @@ echo -e "${BLUE}Installing ${GREEN}php-fpm v7.2 ${BLUE}#this may take a while#${
     wget -qO /etc/php-fpm.d/www.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/www.conf &> /dev/null
     chown -R root:nginx /var/lib/php &> /dev/null
     
-    systemctl enable --now php-fpm
+    systemctl enable --now php-fpm &> /dev/null
     }
+
+
+certificate() {
+echo -e "${BLUE}Creating ${GREEN}ssl certificate${RED}#Manual input required#${NC}"
+    path="/etc/nginx/ssl/thematrix.local"
+    mkdir -p $path &> /dev/null
+    openssl genrsa -des3 -out $path/self-ssl.key 2048
+    
+    cp -v $path/self-ssl.{key,original} &> /dev/null
+    openssl rsa -in $path/self-ssl.original -out $path/self-ssl.key
+    rm -v $path/self-ssl.original  &> /dev/null
+
+    openssl req -new -key $path/self-ssl.key -out $path/self-ssl.csr 
+    openssl x509 -req -days 365 -in $path/self-ssl.csr -signkey $path/self-ssl.key -out $path/self-ssl.crt 
+}
 
 install2 () {
 echo -e "${BLUE}Installing ${GREEN}composer ${NC}"
@@ -56,33 +72,25 @@ echo -e "${BLUE}Installing ${GREEN}composer ${NC}"
 echo -e "${BLUE}Installing ${GREEN}drupal using composer ${BLUE}#this may take a while#${NC}"
     composer create-project --no-progress drupal-composer/drupal-project:8.x-dev /var/www/my_drupal --stability dev --no-interaction &> /dev/null
 echo -e "${BLUE}Configuring ${GREEN}nginx${BLUE} & ${GREEN}drupal${NC}"
-    wget -qO /etc/nginx/conf.d/192.168.1.35.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/nginxdrupal.conf
-    chown nginx:nginx /etc/nginx/conf.d/192.168.1.35.conf
+    wget -qO /etc/nginx/conf.d/thematrix.local.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/nginxdrupal.conf
+    chown nginx:nginx /etc/nginx/conf.d/thematrix.local.conf
     wget -qO /var/lib/pgsql/data/pg_hba.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/pg_hba.conf
     wget -qO /etc/nginx/nginx.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/nginx.conf
 
     chown -R nginx: /var/www/my_drupal
 }
 
-certificate() {
-echo -e "${BLUE}Creating ${GREEN}ssl certificate${BLUE}#Manual input required#${NC}"
-    path="/etc/nginx/ssl/thematrix.local"
-    mkdir -p /etc/nginx/ssl/thematrix.local
-    openssl genrsa -des3 -out $path/self-ssl.key 2048
-    openssl req -new -key $path/self-ssl.key -out $path/self-ssl.csr
-
-    cp -v $path/self-ssl.{key,original}
-    openssl rsa -in $path/self-ssl.original -out $path/self-ssl.key
-    rm -v $path/self-ssl.original
-
-    openssl x509 -req -days 365 -in $path/self-ssl.csr -signkey $path/self-ssl.key -out $path/self-ssl.crt
-}
-
-reloadServices () {
+services () {
 echo -e "${BLUE}Restarting services${NC}"
     systemctl restart nginx
     systemctl restart php-fpm
-    systemctl restart postgresql
+    systemctl restart postgresql 
+echo -e "${BLUE}Configuring ${GREEN}firewall${NC}"
+    setenforce 0
+    systemctl enable --now firewalld &> /dev/null
+    firewall-cmd --permanent --add-service=http &> /dev/null
+    firewall-cmd --permanent --add-service=https &> /dev/null
+    firewall-cmd --reload &> /dev/null
 }
 
 
@@ -90,7 +98,5 @@ echo -e "${BLUE}Restarting services${NC}"
 deviceConfig "192.168.1.35" "Trinity"
 install1
 install2
-reloadServices
-
-
-    
+certificate
+services

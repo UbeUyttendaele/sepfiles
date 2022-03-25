@@ -48,7 +48,7 @@ echo -e "${BLUE}Changing firewall setting to allow dns${NC}"
 }
 
 
-#deviceConfig "192.168.1.34" "Morpheus"
+deviceConfig "192.168.1.34" "Morpheus"
 install
 services
 
