@@ -1,44 +1,55 @@
 #! /bin/bash
-echo "Checking interface file type and configuring it"
-echo "Determening interface name"
-    ifconfig -a > interfacenaam
-    interface=$(cut -d : -f 1 interfacenaam | head -n 1)
-    rm interfacenaam
-echo "Interface name found: $interface"
-echo "Configuring interface: $interface"
-    FILE=/etc/sysconfig/network-scripts/ifcfg-$interface
+RED='\033[0;31m'
+BLUE='\033[1;34m'
+NC='\033[0m'
+
+deviceConfig () {
+echo -e "${BLUE}Configuring interface${NC}"
+echo -e "${BLUE}Determening interface name${NC}"
+ifconfig -a > interfacenaam
+interface=$(cut -d : -f 1 interfacenaam | head -n 1)
+rm interfacenaam
+echo -e "${BLUE}Interface name found: ${RED}$interface${NC}"
+echo -e "${BLUE}Configuring interface: ${RED}$interface${NC}"
+FILE=/etc/sysconfig/network-scripts/ifcfg-$interface
+
     echo "DEVICE=$interface" > "$FILE"
     echo "BOOTPROTO=none" >> "$FILE"
     echo "ONBOOT=yes" >> "$FILE"
-    echo "IPADDR=192.168.1.34" >> "$FILE"
+    echo "IPADDR=$1" >> "$FILE"
     echo "PREFIX=29" >> "$FILE"
     echo "GATEWAY=192.168.1.33" >> "$FILE"
-echo "interface file configured"
-    ifdown $interface
-    ifup $interface
-echo "Installing bind"
+    systemctl restart NetworkManager
+
+echo -e "${BLUE}Setting ${RED}hostname${NC}"
+    hostnamectl set-hostname $2 --pretty --static --transient
+}
+
+install () {
+echo -e "${BLUE}Installing ${RED}bind${NC}"
     dnf install -y bind &> /dev/null
-echo "Bind installed"
-echo "Disabling bind in case it was running"
-    systemctl stop named
-echo "removing current /etc/named.conf file. "
+echo -e "${BLUE}Configuring ${RED}bind${NC}"
     rm /etc/named.conf
-echo "Getting relevant files from the github repository. (https://github.com/UbeUyttendaele/sepfiles)"
     wget -qO /var/named/1.168.192.in-addr.arpa https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/morpheus/Files/1.168.192.in-addr.arpa
     wget -qO /var/named/_msdcs.thematrix.local https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/morpheus/Files/msdcs.thematrix.local
     wget -qO /var/named/thematrix.local https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/morpheus/Files//thematrix.local
     wget -qO /etc/named.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/morpheus/Files//named.conf
     wget -qO /var/named/0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.ip6.arpa https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/morpheus/Files/0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.e.f.ip6.arpa
-echo "Relevant files downloaded from the github repository."
-echo "Changing firewall setting to allow dns"
+}
+services () {
+echo -e "${BLUE}Restarting services${NC}"
+    systemctl stop named &> /dev/null
+    systemctl stop firewalld &> /dev/null
+    systemctl enable --now named &> /dev/null
+    systemctl enable --now firewalld &> /dev/null
+echo -e "${BLUE}Changing firewall setting to allow dns${NC}"
     firewall-cmd --add-service=dns --permanent &> /dev/null
     firewall-cmd --reload &> /dev/null
-echo "Firewall settings changed"
+}
 
-echo "Enabling bind"
-    systemctl enable --now named &> /dev/null
-echo "Bind succesfully configured"
 
-hostnamectl set-hostname Morpheus --pretty --static --transient
+#deviceConfig "192.168.1.34" "Morpheus"
+install
+services
 
 
