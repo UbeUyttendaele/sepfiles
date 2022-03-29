@@ -101,9 +101,9 @@ echo -e "${BLUE}Configuring ${GREEN}firewall & SELinux${NC}"
     setsebool httpd_can_network_connect_db 1
     setsebool httpd_execmem 1
     setsebool domain_can_mmap_files 1
-
-    semodule -i httpd-vboxsf.pp
-
+    wget -qO /tmp/httpd-vboxsf.pp https://github.com/UbeUyttendaele/sepfiles/blob/main/trinity/Files/httpd-vboxsf.pp?raw=true
+    semodule -i /tmp/httpd-vboxsf.pp
+    
 
     systemctl enable --now firewalld &> /dev/null
     firewall-cmd --permanent --add-service=http &> /dev/null
