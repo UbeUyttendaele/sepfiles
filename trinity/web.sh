@@ -71,12 +71,11 @@ echo -e "${BLUE}Installing ${GREEN}composer ${NC}"
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer &> /dev/null
 echo -e "${BLUE}Installing ${GREEN}drupal using composer ${BLUE}#this may take a while#${NC}"
     composer create-project --no-progress drupal-composer/drupal-project:8.x-dev /var/www/my_drupal --stability dev --no-interaction &> /dev/null
-echo -e "${BLUE}Configuring ${GREEN}nginx${BLUE} & ${GREEN}drupal${NC}"
     wget -qO /etc/nginx/conf.d/thematrix.local.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/nginxdrupal.conf
     chown nginx:nginx /etc/nginx/conf.d/thematrix.local.conf
     wget -qO /var/lib/pgsql/data/pg_hba.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/pg_hba.conf
     wget -qO /etc/nginx/nginx.conf https://raw.githubusercontent.com/UbeUyttendaele/sepfiles/main/trinity/Files/nginx.conf
-
+    mkdir -p /var/www/my_drupal/config/sync
     chown -R nginx: /var/www/my_drupal
 }
 
@@ -85,8 +84,27 @@ echo -e "${BLUE}Restarting services${NC}"
     systemctl restart nginx
     systemctl restart php-fpm
     systemctl restart postgresql 
-echo -e "${BLUE}Configuring ${GREEN}firewall${NC}"
-    setenforce 0
+echo -e "${BLUE}Configuring ${GREEN}firewall & SELinux${NC}"
+    setenforce 1
+
+    semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/my_drupal/web(/.*)?"  &> /dev/null
+    semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/my_drupal/web/sites/default/settings.php'  &> /dev/null
+    semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/my_drupal/web/sites/default/files'  &> /dev/null
+    restorecon -Rv /var/www/my_drupal/web/  &> /dev/null
+    restorecon -v /var/www/my_drupal/web/sites/default/settings.php  &> /dev/null
+    restorecon -Rv /var/www/my_drupal/web/sites/default/files  &> /dev/null
+
+    setsebool httpd_can_network_connect 1
+    setsebool httpd_graceful_shutdown 1
+    setsebool httpd_can_network_relay 1
+    setsebool nis_enabled 1
+    setsebool httpd_can_network_connect_db 1
+    setsebool httpd_execmem 1
+    setsebool domain_can_mmap_files 1
+
+    semodule -i httpd-vboxsf.pp
+
+
     systemctl enable --now firewalld &> /dev/null
     firewall-cmd --permanent --add-service=http &> /dev/null
     firewall-cmd --permanent --add-service=https &> /dev/null
@@ -95,7 +113,7 @@ echo -e "${BLUE}Configuring ${GREEN}firewall${NC}"
 
 
 
-deviceConfig "192.168.1.35" "Trinity"
+#deviceConfig "192.168.1.35" "Trinity"
 install1
 install2
 certificate

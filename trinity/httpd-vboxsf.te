@@ -1,0 +1,18 @@
+
+module httpd-vboxsf 1.0;
+
+require {
+	type vmblock_t;
+	type httpd_t;
+	class process execmem;
+	class file { create getattr open read setattr write };
+	class dir { add_name open read create setattr };
+}
+
+#============= httpd_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow httpd_t self:process execmem;
+allow httpd_t vmblock_t:dir { add_name open read create setattr };
+allow httpd_t vmblock_t:file { create getattr open read setattr write };
+
