@@ -113,7 +113,7 @@ echo -e "${BLUE}Configuring ${GREEN}firewall & SELinux${NC}"
 
 
 
-#deviceConfig "192.168.1.35" "Trinity"
+deviceConfig "192.168.1.35" "Trinity"
 install1
 install2
 certificate
