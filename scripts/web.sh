@@ -1,31 +1,8 @@
 #! /bin/bash
 GREEN='\033[0;32m'
-RED='\033[1;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 #example: echo -e "I ${RED}love${NC} Stack Overflow"
-
-deviceConfig () {
-echo -e "${BLUE}Configuring interface${NC}"
-echo -e "${BLUE}Determening interface name${NC}"
-ifconfig -a > interfacenaam
-interface=$(cut -d : -f 1 interfacenaam | head -n 1)
-rm interfacenaam
-echo -e "${BLUE}Interface name found: ${GREEN}$interface${NC}"
-echo -e "${BLUE}Configuring interface: ${GREEN}$interface${NC}"
-FILE=/etc/sysconfig/network-scripts/ifcfg-$interface
-
-    echo "DEVICE=$interface" > "$FILE"
-    echo "BOOTPROTO=none" >> "$FILE"
-    echo "ONBOOT=yes" >> "$FILE"
-    echo "IPADDR=$1" >> "$FILE"
-    echo "PREFIX=29" >> "$FILE"
-    echo "GATEWAY=192.168.1.33" >> "$FILE"
-    systemctl restart NetworkManager
-
-echo -e "${BLUE}Setting hostname${NC}"
-    hostnamectl set-hostname $2 --pretty --static --transient
-}
 
 install1 () {
 echo -e "${BLUE}Installing ${GREEN}nginx${BLUE} & ${GREEN}postgresql ${BLUE}#this may take a while#${NC}"
@@ -53,7 +30,7 @@ echo -e "${BLUE}Installing ${GREEN}php-fpm v7.2 ${BLUE}#this may take a while#${
 
 
 certificate() {
-echo -e "${BLUE}Creating ${GREEN}ssl certificate${RED}#Manual input required#${NC}"
+echo -e "${BLUE}Creating ${GREEN}ssl certificate ${RED}#Manual input required#${NC}"
     path="/etc/nginx/ssl/thematrix.local"
     mkdir -p $path &> /dev/null
     openssl genrsa -des3 -out $path/self-ssl.key 2048
@@ -111,9 +88,6 @@ echo -e "${BLUE}Configuring ${GREEN}firewall & SELinux${NC}"
     firewall-cmd --reload &> /dev/null
 }
 
-
-
-deviceConfig "192.168.1.35" "Trinity"
 install1
 install2
 certificate
